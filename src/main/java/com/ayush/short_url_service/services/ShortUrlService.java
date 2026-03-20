@@ -8,4 +8,6 @@ import java.util.Optional;
 public interface ShortUrlService {
 
     public Optional<List<ShortUrl>> publicShortUrls();
+
+    public Optional<ShortUrl> findByShortKey(String shortKey);
 }

@@ -22,4 +22,9 @@ public class ShortUrlServiceImpl implements ShortUrlService {
     public Optional<List<ShortUrl>> publicShortUrls() {
         return shortUrlRepository.findByIsPrivateFalse();
     }
+
+    @Override
+    public Optional<ShortUrl> findByShortKey(String shortKey) {
+        return shortUrlRepository.findByShortKey(shortKey);
+    }
 }

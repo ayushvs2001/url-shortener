@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface ShortUrlRepository extends JpaRepository<ShortUrl, Long> {
      public Optional<List<ShortUrl>> findByIsPrivateFalse();
 
+     public Optional<ShortUrl> findByShortKey(String shortKey);
+
 }
