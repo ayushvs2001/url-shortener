@@ -1,5 +1,6 @@
 package com.ayush.short_url_service.services;
 
+import com.ayush.short_url_service.dto.ShortUrlDto;
 import com.ayush.short_url_service.entities.ShortUrl;
 
 import java.util.List;
@@ -7,7 +8,7 @@ import java.util.Optional;
 
 public interface ShortUrlService {
 
-    public Optional<List<ShortUrl>> publicShortUrls();
+    public List<ShortUrlDto> publicShortUrls();
 
-    public Optional<ShortUrl> findByShortKey(String shortKey);
+    public ShortUrlDto findByShortKey(String shortKey);
 }

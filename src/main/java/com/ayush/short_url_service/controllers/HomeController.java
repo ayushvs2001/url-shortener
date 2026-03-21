@@ -1,5 +1,6 @@
 package com.ayush.short_url_service.controllers;
 
+import com.ayush.short_url_service.dto.ShortUrlDto;
 import com.ayush.short_url_service.entities.ShortUrl;
 import com.ayush.short_url_service.exceptions.ShortUrlNotFoundException;
 import com.ayush.short_url_service.services.ShortUrlService;
@@ -27,15 +28,9 @@ public class HomeController {
 
     @GetMapping("/")
     public String home(Model model) {
-        Optional<List<ShortUrl>> publicShortUrls = shortUrlService.publicShortUrls();
+        List<ShortUrlDto> publicShortUrls = shortUrlService.publicShortUrls();
 
-        List<ShortUrl> currentPublicShortUrls = new ArrayList<>();
-
-        if(publicShortUrls.isPresent()){
-            currentPublicShortUrls = publicShortUrls.get();
-        }
-
-        model.addAttribute("publicShortUrls", currentPublicShortUrls);
+        model.addAttribute("publicShortUrls", publicShortUrls);
         model.addAttribute("baseUrl", "http://localhost:8080");
 
         return "homepage";
@@ -43,17 +38,9 @@ public class HomeController {
 
     @GetMapping("/s/{shortKey}")
     public String redirectToShortUrl(@PathVariable String shortKey) {
-        Optional<ShortUrl> shortUrl = shortUrlService.findByShortKey(shortKey);
+        ShortUrlDto shortUrlDto = shortUrlService.findByShortKey(shortKey);
 
-        System.out.println("inside the redirect to short url method");
-
-        if(shortUrl.isPresent()){
-            return "redirect:"+shortUrl.get().getOriginalUrl();
-        }
-        System.out.println("URL not present");
-
-
-        throw new ShortUrlNotFoundException("Invalid Short URL: /" + shortKey);
+        return "redirect:"+shortUrlDto.getOriginalUrl();
     }
 
 }
