@@ -1,4 +1,4 @@
-package com.ayush.short_url_service.dto;
+package com.ayush.short_url_service.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

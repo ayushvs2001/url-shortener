@@ -1,5 +1,6 @@
 package com.ayush.short_url_service.entities;
 
+import com.ayush.short_url_service.enums.Role;
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
@@ -23,16 +24,10 @@ public class User {
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    public String getRole() {
-        return role;
-    }
-
-    public void setRole(String role) {
-        this.role = role;
-    }
-
+    @ColumnDefault("'ROLE_USER'")
+    @Enumerated(EnumType.STRING)
     @Column(name="role",  nullable = false, length = 100)
-    private String role;
+    private Role role;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
@@ -76,6 +71,14 @@ public class User {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 
     @Override

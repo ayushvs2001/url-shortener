@@ -9,8 +9,7 @@ import java.time.Instant;
 @Table(name = "short_urls")
 public class ShortUrl {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "short_urls_id_gen")
-    @SequenceGenerator(name = "short_urls_id_gen", sequenceName = "short_urls_id_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 

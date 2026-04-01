@@ -9,9 +9,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface ShortUrlRepository extends JpaRepository<ShortUrl, Long> {
-    @Query("select su from ShortUrl su join fetch su.createdBy where su.isPrivate = false order by su.createdAt desc")
+    @Query("select su from ShortUrl su left join fetch su.createdBy where su.isPrivate = false order by su.createdAt desc")
     public List<ShortUrl> findByIsPrivateFalse();
 
      public Optional<ShortUrl> findByShortKey(String shortKey);
+
+     public boolean existsByShortKey(String shortKey);
 
 }

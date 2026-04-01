@@ -1,6 +1,6 @@
 package com.ayush.short_url_service.mapper;
 
-import com.ayush.short_url_service.dto.UserDto;
+import com.ayush.short_url_service.dto.response.UserDto;
 import com.ayush.short_url_service.entities.User;
 import org.springframework.stereotype.Controller;
 

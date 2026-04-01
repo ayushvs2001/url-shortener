@@ -1,13 +1,18 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
 
 
-<head>
+<head th:replace="~{layout :: head}"></head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Page Not Found</title>
 </head>
 <body>
-    <h1 th:text="${errorMessage}"></h1>
+<div th:replace="~{layout :: layout}">
+    <div th:fragment="content">
+        <h1 th:text="${#strings.isEmpty(pageErrorMessage) ? 'Not Found.' : pageErrorMessage}"></h1>
+    </div>
+</div>
 </body>
 </html>
