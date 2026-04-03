@@ -28,4 +28,13 @@ public class SecurityUtils {
 
         return null;
     }
+
+    public Long getUserId(){
+        User user = getUserInfo();
+        if(user != null){
+            return user.getId();
+        }
+
+        return null;
+    }
 }

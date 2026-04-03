@@ -7,6 +7,7 @@ import com.ayush.short_url_service.entities.ShortUrl;
 import com.ayush.short_url_service.exceptions.ShortUrlNotFoundException;
 import com.ayush.short_url_service.mapper.ShortUrlMapper;
 import com.ayush.short_url_service.repositories.ShortUrlRepository;
+import com.ayush.short_url_service.repositories.UserRepository;
 import com.ayush.short_url_service.validation.UrlValidator;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -23,12 +25,14 @@ public class ShortUrlServiceImpl implements ShortUrlService {
     private final ShortUrlRepository shortUrlRepository;
     private final ShortUrlMapper shortUrlMapper;
     private final ApplicationProperties applicationProperties;
+    private final UserRepository userRepository;
 
     @Autowired
-    public ShortUrlServiceImpl(ShortUrlRepository shortUrlRepository, ShortUrlMapper shortUrlMapper, ApplicationProperties applicationProperties) {
+    public ShortUrlServiceImpl(ShortUrlRepository shortUrlRepository, ShortUrlMapper shortUrlMapper, ApplicationProperties applicationProperties, UserRepository userRepository) {
         this.shortUrlRepository = shortUrlRepository;
         this.shortUrlMapper = shortUrlMapper;
         this.applicationProperties = applicationProperties;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -43,13 +47,19 @@ public class ShortUrlServiceImpl implements ShortUrlService {
     }
 
     @Override
-    public ShortUrlDto findByShortKey(String shortKey) {
+    public ShortUrlDto findByShortKey(String shortKey, Long userId) {
         Optional<ShortUrl> shortUrl = shortUrlRepository.findByShortKey(shortKey);
         if(shortUrl.isPresent()){
 
             ShortUrl curShortUrl =  shortUrl.get();
+
             if(curShortUrl.getExpiresAt() != null && curShortUrl.getExpiresAt().isBefore(Instant.now())) {
-                throw new ShortUrlNotFoundException("Short URL is expired: " + applicationProperties + "/" + shortKey);
+                throw new ShortUrlNotFoundException("Short URL is expired: " + applicationProperties.baseUrl() + "/" + shortKey);
+            }
+
+            if(curShortUrl.getIsPrivate() != null && curShortUrl.getCreatedBy() != null && !Objects.equals(curShortUrl.getCreatedBy().getId(), userId))
+            {
+                throw new ShortUrlNotFoundException("Short URL is private: " + applicationProperties.baseUrl() + "/" + shortKey);
             }
 
             curShortUrl.setClickCount(curShortUrl.getClickCount() + 1);
@@ -77,12 +87,21 @@ public class ShortUrlServiceImpl implements ShortUrlService {
 
         ShortUrl shortUrl = new ShortUrl();
         shortUrl.setOriginalUrl(createShortUrlCommand.originalUrl());
+        if(createShortUrlCommand.userId() != null){
+            shortUrl.setCreatedBy(userRepository.findById(createShortUrlCommand.userId()).orElse(null));
+            shortUrl.setIsPrivate(createShortUrlCommand.isPrivate());
+            Integer expiresInDays = createShortUrlCommand.expiresInDays() == null? applicationProperties.expiresInDays() : createShortUrlCommand.expiresInDays();
+            shortUrl.setExpiresAt(Instant.now().plus(expiresInDays, java.time.temporal.ChronoUnit.DAYS));
+        }
+        else{
+            shortUrl.setCreatedBy(null);
+            shortUrl.setIsPrivate(false);
+            shortUrl.setExpiresAt(Instant.now().plus(applicationProperties.expiresInDays(), java.time.temporal.ChronoUnit.DAYS));
+        }
+
         shortUrl.setShortKey(shortKey);
         shortUrl.setClickCount(0L);
-        shortUrl.setCreatedBy(null);
         shortUrl.setCreatedAt(Instant.now());
-        shortUrl.setIsPrivate(false);
-        shortUrl.setExpiresAt(Instant.now().plus(30, java.time.temporal.ChronoUnit.DAYS));
         shortUrlRepository.save(shortUrl);
         return shortUrlMapper.toShortUrlDto(shortUrl);
     }

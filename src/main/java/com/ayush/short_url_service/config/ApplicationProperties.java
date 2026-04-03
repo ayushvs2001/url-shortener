@@ -18,8 +18,8 @@ public record ApplicationProperties(
         @DefaultValue("30")
         @Min(1)
         @Max(365)
-        int expiryDate,
+        Integer expiresInDays,
         @DefaultValue("true")
-        boolean validateLongUrl
+        Boolean validateLongUrl
 ) {
 }

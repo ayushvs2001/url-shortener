@@ -6,6 +6,7 @@ import com.ayush.short_url_service.config.WebSecurityConfig;
 import com.ayush.short_url_service.dto.command.CreateShortUrlCommand;
 import com.ayush.short_url_service.dto.request.CreateShortUrlRequestDto;
 import com.ayush.short_url_service.dto.response.ShortUrlDto;
+import com.ayush.short_url_service.entities.User;
 import com.ayush.short_url_service.services.ShortUrlService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +39,7 @@ public class HomeController {
     public String home(Model model) {
         List<ShortUrlDto> publicShortUrls = shortUrlService.publicShortUrls();
 
-        System.out.println("Security Utils " + securityUtils.getUserInfo());
+//        System.out.println("Security Utils " + securityUtils.getUserInfo());
 
         model.addAttribute("publicShortUrls", publicShortUrls);
         model.addAttribute("baseUrl", applicationProperties.baseUrl());
@@ -48,21 +49,21 @@ public class HomeController {
 
     @GetMapping("/s/{shortKey}")
     public String redirectToShortUrl(@PathVariable String shortKey) {
-        ShortUrlDto shortUrlDto = shortUrlService.findByShortKey(shortKey);
-
+        Long userId = securityUtils.getUserId();
+        ShortUrlDto shortUrlDto = shortUrlService.findByShortKey(shortKey, userId);
         return "redirect:"+shortUrlDto.getOriginalUrl();
     }
 
     @GetMapping("/show-create-short-url-form")
     public String showForm(Model model) {
-        CreateShortUrlRequestDto createShortUrlRequestDto = new CreateShortUrlRequestDto("");
-        model.addAttribute("createShortUrlForm", createShortUrlRequestDto);
+        CreateShortUrlRequestDto form = new CreateShortUrlRequestDto("", false, null);
+        model.addAttribute("createShortUrlForm", form);
         return "showForm";
     }
 
     @PostMapping("/short-urls")
     public String createShortUrls(
-            @Valid @ModelAttribute("createShortUrlForm")  CreateShortUrlRequestDto createShortUrlRequestDto,
+            @Valid @ModelAttribute("createShortUrlForm")  CreateShortUrlRequestDto form,
             BindingResult theBindingResult,
             RedirectAttributes redirectAttributes) {
 
@@ -72,9 +73,15 @@ public class HomeController {
             System.out.println("Form is processed");
 
             try{
-                CreateShortUrlCommand createShortUrlCommand = new CreateShortUrlCommand(createShortUrlRequestDto.originalUrl());
+                CreateShortUrlCommand createShortUrlCommand = new CreateShortUrlCommand(
+                        form.originalUrl(),
+                        form.isPrivate(),
+                        form.expiresInDays(),
+                        securityUtils.getUserId()
+                );
+
                 ShortUrlDto shortUrlDto = shortUrlService.save(createShortUrlCommand);
-                redirectAttributes.addFlashAttribute("successMessage", "Form has been processed successfully. Short URL is created. - " + shortUrlDto.getShortKey());
+                redirectAttributes.addFlashAttribute("successMessage", "Form has been processed successfully. Short URL is created. - " + applicationProperties.baseUrl() + "/s/" +shortUrlDto.getShortKey());
             }
             catch (Exception e) {
                 redirectAttributes.addFlashAttribute("errorMessage", "Short URL creation has failed.");
