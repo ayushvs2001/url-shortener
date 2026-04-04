@@ -20,6 +20,9 @@ public record ApplicationProperties(
         @Max(365)
         Integer expiresInDays,
         @DefaultValue("true")
-        Boolean validateLongUrl
+        Boolean validateLongUrl,
+        @DefaultValue("10")
+        Integer pageSize
+
 ) {
 }

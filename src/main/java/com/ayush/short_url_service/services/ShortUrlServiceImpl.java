@@ -6,13 +6,18 @@ import com.ayush.short_url_service.dto.response.ShortUrlDto;
 import com.ayush.short_url_service.entities.ShortUrl;
 import com.ayush.short_url_service.exceptions.ShortUrlNotFoundException;
 import com.ayush.short_url_service.mapper.ShortUrlMapper;
+import com.ayush.short_url_service.models.PagedResult;
 import com.ayush.short_url_service.repositories.ShortUrlRepository;
 import com.ayush.short_url_service.repositories.UserRepository;
 import com.ayush.short_url_service.validation.UrlValidator;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
-
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.List;
@@ -36,14 +41,15 @@ public class ShortUrlServiceImpl implements ShortUrlService {
     }
 
     @Override
-    public List<ShortUrlDto> publicShortUrls() {
-        List<ShortUrl> shortUrls = shortUrlRepository.findByIsPrivateFalse();
+    public PagedResult<ShortUrlDto> publicShortUrls(Integer page, Integer pageSize) {
+        int pageNo = page > 1 ? page - 1 : 0;
+        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<ShortUrlDto> shortUrlsDto = shortUrlRepository.findAllPublicUrls(pageable)
+                .map(shortUrlMapper::toShortUrlDto);
 
-        System.out.println("inside the list public short urls method..." + shortUrls);
+        System.out.println("inside the list public short urls method..." + shortUrlsDto);
 
-        return shortUrls.stream()
-                .map(shortUrlMapper::toShortUrlDto)
-                .toList();
+        return PagedResult.from(shortUrlsDto);
     }
 
     @Override
@@ -104,6 +110,32 @@ public class ShortUrlServiceImpl implements ShortUrlService {
         shortUrl.setCreatedAt(Instant.now());
         shortUrlRepository.save(shortUrl);
         return shortUrlMapper.toShortUrlDto(shortUrl);
+    }
+
+    @Override
+    public PagedResult<ShortUrlDto> getUserShortUrls(Long userId, Integer page, Integer pageSize) {
+        int pageNo = page > 1 ? page - 1 : 0;
+        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<ShortUrlDto> shortUrlsDto = shortUrlRepository.findByCreatedById(userId, pageable)
+                .map(shortUrlMapper::toShortUrlDto);
+
+        return PagedResult.from(shortUrlsDto);
+    }
+
+    @Transactional
+    @Override
+    public void deleteShortUrls(List<Long> ids, Long userId) {
+        shortUrlRepository.deleteByIdInAndCreatedById(ids, userId);
+    }
+
+    @Override
+    public PagedResult<ShortUrlDto> getAllShortUrls(Integer page, Integer pageSize) {
+        int pageNo = page > 1 ? page - 1 : 0;
+        Pageable pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<ShortUrlDto> shortUrlsDto = shortUrlRepository.findAllShortUrls(pageable)
+                .map(shortUrlMapper::toShortUrlDto);
+
+        return PagedResult.from(shortUrlsDto);
     }
 
     private String generateUniqueShortKey() {

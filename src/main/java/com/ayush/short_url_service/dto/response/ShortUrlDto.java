@@ -17,4 +17,5 @@ public class ShortUrlDto {
     private UserDto createdBy;
     private Long clickCount;
     private Instant createdAt;
+    private Boolean isPrivate;
 }

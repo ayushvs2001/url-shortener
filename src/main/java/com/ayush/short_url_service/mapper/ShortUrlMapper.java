@@ -22,7 +22,8 @@ public class ShortUrlMapper {
                                         shortUrl.getExpiresAt(),
                                         userDto,
                                         shortUrl.getClickCount(),
-                                        shortUrl.getCreatedAt()
+                                        shortUrl.getCreatedAt(),
+                                        shortUrl.getIsPrivate()
                                     );
 
         return shortUrlDto;

@@ -7,16 +7,15 @@ import com.ayush.short_url_service.dto.command.CreateShortUrlCommand;
 import com.ayush.short_url_service.dto.request.CreateShortUrlRequestDto;
 import com.ayush.short_url_service.dto.response.ShortUrlDto;
 import com.ayush.short_url_service.entities.User;
+import com.ayush.short_url_service.exceptions.ShortUrlNotFoundException;
+import com.ayush.short_url_service.models.PagedResult;
 import com.ayush.short_url_service.services.ShortUrlService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
@@ -36,13 +35,12 @@ public class HomeController {
     }
 
     @GetMapping("/")
-    public String home(Model model) {
-        List<ShortUrlDto> publicShortUrls = shortUrlService.publicShortUrls();
-
-//        System.out.println("Security Utils " + securityUtils.getUserInfo());
-
-        model.addAttribute("publicShortUrls", publicShortUrls);
+    public String home(@RequestParam(defaultValue = "1") Integer page,
+            Model model) {
+        PagedResult<ShortUrlDto> publicShortUrls = shortUrlService.publicShortUrls(page, applicationProperties.pageSize());
+        model.addAttribute("shortUrls", publicShortUrls);
         model.addAttribute("baseUrl", applicationProperties.baseUrl());
+        model.addAttribute("paginationUrl", "/");
 
         return "homepage";
     }
@@ -58,7 +56,7 @@ public class HomeController {
     public String showForm(Model model) {
         CreateShortUrlRequestDto form = new CreateShortUrlRequestDto("", false, null);
         model.addAttribute("createShortUrlForm", form);
-        return "showForm";
+        return "show-form";
     }
 
     @PostMapping("/short-urls")
@@ -96,6 +94,36 @@ public class HomeController {
     @GetMapping("/login")
     public String loginForm(){
         return "login";
+    }
+
+    @GetMapping("/my-urls")
+    public String getMyUrls(@RequestParam(defaultValue = "1") Integer page,
+                            Model model) {
+        Long userId = securityUtils.getUserId();
+        PagedResult<ShortUrlDto> publicShortUrls = shortUrlService.getUserShortUrls(userId, page, applicationProperties.pageSize());
+        model.addAttribute("shortUrls", publicShortUrls);
+        model.addAttribute("baseUrl", applicationProperties.baseUrl());
+        model.addAttribute("paginationUrl", "/my-urls");
+        return "my-urls";
+    }
+
+    @PostMapping("/delete-urls")
+    public String deleteUrls(@RequestParam(name = "ids", required = false) List<Long> ids,
+                             RedirectAttributes redirectAttributes) {
+        Long userId = securityUtils.getUserId();
+
+        if(ids == null || ids.isEmpty() || userId == null){
+            redirectAttributes.addFlashAttribute("errorMessage", "Please select the URL/s.");
+        }
+
+        try{
+            shortUrlService.deleteShortUrls(ids, userId);
+            redirectAttributes.addFlashAttribute("successMessage", "Url/s has been deleted successfully");
+        }
+        catch (Exception e){
+            redirectAttributes.addFlashAttribute("errorMessage", "Error in deleting URLs - " + e.getMessage());
+        }
+        return "redirect:/my-urls";
     }
 
 }

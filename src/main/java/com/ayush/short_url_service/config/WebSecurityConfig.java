@@ -27,8 +27,6 @@ public class WebSecurityConfig {
                 authorizeHttpRequests(authorizeRequests ->
                 authorizeRequests.requestMatchers("/error", "/webjars/**", "/css/**", "/js/**", "/images/**",
                         "/", "/short-urls", "/s/**", "/register", "/login").permitAll().
-                         requestMatchers("/my-urls").authenticated().
-                        requestMatchers("/admin-dashboard").hasRole("ADMIN").
                         anyRequest().authenticated())
                 .formLogin( formLogin -> formLogin.loginPage("/login").defaultSuccessUrl("/").permitAll())
                 .logout(logout -> logout.logoutUrl("/logout").permitAll().logoutSuccessUrl("/login?logout").permitAll());
