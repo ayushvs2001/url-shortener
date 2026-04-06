@@ -4,12 +4,16 @@ import com.ayush.short_url_service.config.ApplicationProperties;
 import com.ayush.short_url_service.config.SecurityUtils;
 import com.ayush.short_url_service.config.WebSecurityConfig;
 import com.ayush.short_url_service.dto.command.CreateShortUrlCommand;
+import com.ayush.short_url_service.dto.command.CreateUserCommand;
 import com.ayush.short_url_service.dto.request.CreateShortUrlRequestDto;
+import com.ayush.short_url_service.dto.request.CreateUserRequestDto;
 import com.ayush.short_url_service.dto.response.ShortUrlDto;
 import com.ayush.short_url_service.entities.User;
+import com.ayush.short_url_service.enums.Role;
 import com.ayush.short_url_service.exceptions.ShortUrlNotFoundException;
 import com.ayush.short_url_service.models.PagedResult;
 import com.ayush.short_url_service.services.ShortUrlService;
+import com.ayush.short_url_service.services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -24,12 +28,14 @@ import java.util.List;
 public class HomeController {
 
     private final ShortUrlService shortUrlService;
+    private final UserService userService;
     private final ApplicationProperties applicationProperties;
     private final SecurityUtils securityUtils;
 
     @Autowired
-    public HomeController(ShortUrlService shortUrlService, ApplicationProperties applicationProperties, SecurityUtils securityUtils) {
+    public HomeController(ShortUrlService shortUrlService, UserService userService, ApplicationProperties applicationProperties, SecurityUtils securityUtils) {
         this.shortUrlService = shortUrlService;
+        this.userService = userService;
         this.applicationProperties = applicationProperties;
         this.securityUtils = securityUtils;
     }
@@ -125,5 +131,37 @@ public class HomeController {
         }
         return "redirect:/my-urls";
     }
+
+    @GetMapping("/register")
+    public String registerForm(Model model){
+        model.addAttribute("user", new CreateUserRequestDto("", "", ""));
+        return "register";
+    }
+
+    @PostMapping("/register")
+    public String registerUser(@Valid @ModelAttribute("user") CreateUserRequestDto userInfo,
+                               BindingResult bindingResult,
+                               RedirectAttributes redirectAttributes) {
+        if(bindingResult.hasErrors()) {
+            return "register";
+        }
+
+        try{
+            CreateUserCommand createUserCommand = new CreateUserCommand(
+                    userInfo.email(),
+                    userInfo.name(),
+                    userInfo.password(),
+                    Role.ROLE_USER
+            );
+            userService.saveUser(createUserCommand);
+            redirectAttributes.addFlashAttribute("successMessage", "User has been created successfully");
+            return "redirect:/login";
+        }
+        catch (Exception e){
+            redirectAttributes.addFlashAttribute("errorMessage", "Error in creating user - " + e.getMessage());
+            return "redirect:/register";
+        }
+    }
+
 
 }

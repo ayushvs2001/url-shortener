@@ -63,7 +63,7 @@ public class ShortUrlServiceImpl implements ShortUrlService {
                 throw new ShortUrlNotFoundException("Short URL is expired: " + applicationProperties.baseUrl() + "/" + shortKey);
             }
 
-            if(curShortUrl.getIsPrivate() != null && curShortUrl.getCreatedBy() != null && !Objects.equals(curShortUrl.getCreatedBy().getId(), userId))
+            if(curShortUrl.getIsPrivate() != null && curShortUrl.getIsPrivate() && curShortUrl.getCreatedBy() != null && !Objects.equals(curShortUrl.getCreatedBy().getId(), userId))
             {
                 throw new ShortUrlNotFoundException("Short URL is private: " + applicationProperties.baseUrl() + "/" + shortKey);
             }
